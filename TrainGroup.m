@@ -40,14 +40,14 @@ function angle = AngleEstimate(Fs)
     L = size(wave, 1);
     psdF = fft(wave);
     psdF1 = psdF(: , 1);
-    psdF2 = conj(psdF(: , 2));
-    corrF = psdF1 .* psdF2;
-    SCOT = 1 ./ abs(psdF1 .* psdF2).^0.65;
+    psdF2 = psdF(: , 2);
+    corrF = psdF1 .* conj(psdF2);
+    SCOT = 1 ./ (psdF1 .* psdF2).^0.5;
     PHAT = 1 ./ abs(corrF);
     
-%     corrT = abs(ifft(corrF .* PHAT));
-%     corrT = abs(ifft(corrF .* SCOT));
-    corrT = abs(ifft(corrF));
+%     corrT = ifft(corrF .* PHAT);
+%     corrT = ifft(corrF .* SCOT);
+    corrT = ifft(corrF);
 %     plot(corrT)
     
     len = 0.1;
@@ -68,6 +68,55 @@ function angle = AngleEstimate(Fs)
         end
     end
     
+    disp(['angle: ', num2str(angle)]);
+
+end
+
+function angle = SecondaryCorrelation(Fs)
+    speed = 343;
+    global wave;
+    
+    L = size(wave, 1);
+    psdF = fft(wave);
+    psdF1 = psdF(: , 1);
+    psdF2 = psdF(: , 2);
+    corrF11 = psdF1 .* conj(psdF1);
+    corrF12 = psdF1 .* conj(psdF2);
+    corrF22 = psdF2 .* conj(psdF2);
+    
+    corrF = corrF11 .* conj(corrF12);
+    SCOT = 1 ./ (corrF11 .* corrF22).^0.5;
+    PHAT = 1 ./ abs(corrF);
+    
+%     corrT = ifft(corrF);
+%     corrT = ifft(corrF .* PHAT);
+    corrT = ifft(corrF .* SCOT);
+%     plot(corrT)
+
+%     SCOT = 1 ./ abs(psdF1 .* conj(psdF2)).^0.65;
+%     PHAT = 1 ./ abs(corrF12);
+%     corrT = abs(ifft(corrF .* PHAT));
+%     corrT = abs(ifft(corrF .* SCOT));
+
+    len = 0.1;
+    [~, M] = max(corrT);
+    if M <= L / 2
+        dis = M / Fs * speed;
+        if dis <= len
+            angle = acos(dis/len)*180 / pi;
+        else
+            angle = 0;
+        end
+    else
+        dis = (L-M) / Fs * speed;
+        if dis <= len
+            angle = 180 -acos(dis/len)*180 / pi;
+        else
+            angle = 180;
+        end
+    end
+    
+    angle = 180-angle;
     disp(['angle: ', num2str(angle)]);
 
 end
