@@ -46,9 +46,11 @@ function angle = AngleEstimate(Fs)
     psdF2 = psdF(: , 2);
     
     %% 对功率谱FFT结果进行滤波
-    FilterF = ones(length(psdF1), 1, 'double')*0.01;
-    indexHigh = 2500;
-    indexLow = 200;
+    FilterF = ones(length(psdF1), 1, 'double')*0.001;
+    high = 2400/281600;
+    low = 550/281600;
+    indexHigh = round(high*length(FilterF));
+    indexLow = round(low*length(FilterF));
     FilterF(indexLow: indexHigh) = 1;
     FilterF(end-indexHigh: end-indexLow) = 1;
     psdF1 = psdF1 .* FilterF;
