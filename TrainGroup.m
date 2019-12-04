@@ -1,7 +1,7 @@
-% function Res = TrainGroup()
-    clear all;
-    close all;
-    clc;
+function Res = TrainGroup()
+%     clear all;
+%     close all;
+%     clc;
     %% 文件读取
     fid = fopen('train\angle.txt');
     tmp = textscan(fid, '%f');
@@ -12,8 +12,8 @@
     angle = zeros(trainNum, 1, 'double');
     
     % 过拟合得到的参数
-    High = 2360 / 281600;
-    Low = 540 / 281600;
+    High = 2600 / 281600;
+    Low = 524 / 281600;
     
     global wave;
     k = 10;
@@ -27,7 +27,7 @@
     Res = abs(angle-angleAns);
     disp(['Res: ', num2str(sum(Res)/trainNum)]);
     disp(['Variance: ', num2str(var(Res))]);
-% end
+end
 
 %%
 function angle = AngleEstimate(Fs, High, Low)
@@ -54,7 +54,7 @@ function angle = AngleEstimate(Fs, High, Low)
 %     indexHigh = round(peak * alphaHigh);
 %     indexLow = round(peak * alphaLow);
     FilterF(indexLow: indexHigh) = 1;
-    FilterF(end-indexHigh: end-indexLow) = 1;
+    FilterF(end-indexHigh+1: end-indexLow+1) = 1;
     psdF1 = psdF1 .* FilterF;
     psdF2 = psdF2 .* FilterF;
     
