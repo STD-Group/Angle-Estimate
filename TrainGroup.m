@@ -1,37 +1,36 @@
-clear all;
-close all;
-clc;
-%% 文件读取
-fid = fopen('train\angle.txt');
-tmp = textscan(fid, '%f');
-angleAns = tmp{1};
-trainNum = length(angleAns);
+% function Res = TrainGroup()
+    clear all;
+    close all;
+    clc;
+    %% 文件读取
+    fid = fopen('train\angle.txt');
+    tmp = textscan(fid, '%f');
+    angleAns = tmp{1};
+    trainNum = length(angleAns);
 
-%% 音频处理
-angle = zeros(trainNum, 1, 'double');
-filterFlag = 0;
-
-global wave;
-k = 10;
-for index = 1: trainNum
-    [wave, Fs] = audioread(['train\', num2str(index), '.wav']);
-    wave = resample(wave, k, 1);
-    Fs = Fs*k;
+    %% 音频处理
+    angle = zeros(trainNum, 1, 'double');
     
-%     if filterFlag
-%         Filter = ones(45, 1);
-%         tmp1 = conv(wave(: , 1), Filter);
-%         tmp2 = conv(wave(: , 2), Filter);
-%         wave = [tmp1, tmp2];
-%     end
-    angle(index) = AngleEstimate(Fs);
-end
+    % 过拟合得到的参数
+    High = 2360 / 281600;
+    Low = 540 / 281600;
+    
+    global wave;
+    k = 10;
+    for index = 1: trainNum
+        [wave, Fs] = audioread(['train\', num2str(index), '.wav']);
+        wave = resample(wave, k, 1);
+        Fs = Fs*k;
 
-Res = sum(abs(angle-angleAns))/trainNum;
-disp(['Res: ', num2str(Res)]);
+        angle(index) = AngleEstimate(Fs, High, Low);
+    end
+    Res = abs(angle-angleAns);
+    disp(['Res: ', num2str(sum(Res)/trainNum)]);
+    disp(['Variance: ', num2str(var(Res))]);
+% end
 
 %%
-function angle = AngleEstimate(Fs)
+function angle = AngleEstimate(Fs, High, Low)
     speed = 343;
     global wave;
 %     psd = pwelch(wave);
@@ -47,23 +46,25 @@ function angle = AngleEstimate(Fs)
     
     %% 对功率谱FFT结果进行滤波
     FilterF = ones(length(psdF1), 1, 'double')*0.001;
-    high = 2400/281600;
-    low = 550/281600;
-    indexHigh = round(high*length(FilterF));
-    indexLow = round(low*length(FilterF));
+    indexHigh = round(High*length(FilterF));
+    indexLow = round(Low*length(FilterF));
+%     tmp = abs(psdF1(indexLow: indexHigh));
+%     [~, peak] = max(tmp);
+%     peak = peak+indexLow-1;
+%     indexHigh = round(peak * alphaHigh);
+%     indexLow = round(peak * alphaLow);
     FilterF(indexLow: indexHigh) = 1;
     FilterF(end-indexHigh: end-indexLow) = 1;
     psdF1 = psdF1 .* FilterF;
     psdF2 = psdF2 .* FilterF;
     
+    
     %% 计算相关函数
     corrF = psdF1 .* conj(psdF2);
     SCOT = 1 ./ abs((psdF1 .* psdF2).^0.5);
     PHAT = 1 ./ abs(corrF);
-    HB = abs(corrF) ./ abs(psdF1 .* psdF2);
 %     corrT = ifft(corrF .* PHAT);
 %     corrT = ifft(corrF .* SCOT);
-%     corrT = ifft(corrF .* HB);
     corrT = ifft(corrF);
 %     plot(corrT)
     
