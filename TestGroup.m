@@ -1,30 +1,17 @@
-function Res = TrainGroup(High, Low)
-    %% 文件读取
-    fid = fopen('train\angle.txt');
-    tmp = textscan(fid, '%f');
-    angleAns = tmp{1};
-    trainNum = length(angleAns);
-    fclose(fid);
-
+function angle = TestGroup(High, Low)
     %% 音频处理
-    angle = zeros(trainNum, 1, 'double');
-    
-    % 过拟合得到的参数
-%     High = 2600 / 281600;
-%     Low = 524 / 281600;
+    testNum = 140;
+    angle = zeros(testNum, 1, 'double');
     
     global wave;
     k = 10;
-    for index = 1: trainNum
-        [wave, Fs] = audioread(['train\', num2str(index), '.wav']);
+    for index = 1: testNum
+        [wave, Fs] = audioread(['test\', num2str(index), '.wav']);
         wave = resample(wave, k, 1);
         Fs = Fs*k;
         % 主要处理函数
         angle(index) = AngleEstimate(Fs, High, Low);
     end
-    Res = abs(angle-angleAns);
-%     disp(['Res: ', num2str(sum(Res)/trainNum)]);
-%     disp(['Variance: ', num2str(var(Res))]);
 
 end
 
@@ -62,6 +49,7 @@ function angle = AngleEstimate(Fs, High, Low)
     end
 
 %     plot(corrT)
+
     %% 确定时域相关峰值
     len = 0.1;
     [~, M] = max(corrT);
@@ -122,7 +110,8 @@ function angle = SecondaryCorrelation(Fs)
     end
     
 %     plot(corrT)
-
+    
+    %% 确定时域相关峰值
     len = 0.1;
     [~, M] = max(corrT);
     if M <= L / 2
