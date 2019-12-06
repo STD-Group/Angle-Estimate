@@ -29,6 +29,3 @@ t = toc;
 
 save('test.mat');
 
-figure;
-
-

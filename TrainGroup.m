@@ -9,10 +9,6 @@ function Res = TrainGroup(High, Low)
     %% 音频处理
     angle = zeros(trainNum, 1, 'double');
     
-    % 过拟合得到的参数
-%     High = 2600 / 281600;
-%     Low = 524 / 281600;
-    
     global wave;
     k = 10;
     for index = 1: trainNum
